@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRON BOX — CrossFit Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #e8ff3c;
+    --accent2: #ff4d2e;
+    --text: #f0f0f0;
+    --muted: #666;
+    --card: #161616;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── APP SHELL ─── */
+  .app {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .logo span { color: var(--text); }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #b8d400);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    color: #000;
+  }
+
+  /* ─── SCREEN SYSTEM ─── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ─── PAGE CONTENT ─── */
+  .page-scroll {
+    height: calc(100vh - 60px - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+    scroll-behavior: smooth;
+  }
+  .page-scroll::-webkit-scrollbar { width: 0; }
+
+  /* ─── SECTION LABEL ─── */
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 18px 20px 8px;
+  }
+
+  /* ─── CHARACTER CAROUSEL ─── */
+  .character-section {
+    padding: 16px 0 0;
+    background: linear-gradient(180deg, #111 0%, #0d0d0d 100%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .char-scroll-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 20px 10px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .char-track-wrap {
+    overflow-x: auto;
+    padding: 0 0 4px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .char-track-wrap::-webkit-scrollbar { display: none; }
+
+  .char-track {
+    display: flex;
+    gap: 0;
+    width: max-content;
+  }
+
+  .char-slide {
+    width: 420px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    padding: 0 20px 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  /* SVG character figure */
+  .char-figure-wrap {
+    flex-shrink: 0;
+    width: 120px;
+    position: relative;
+  }
+  .char-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .char-svg-bg {
+    background: var(--surface2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .char-records {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding-top: 28px;
+  }
+
+  .rec-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rec-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent);
+  }
+  .rec-card.accent2::before { background: var(--accent2); }
+  .rec-card.blue::before { background: #3cb4ff; }
+  .rec-card.green::before { background: #3cffa0; }
+
+  .rec-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .rec-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .rec-unit {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Barlow', sans-serif;
+  }
+  .rec-date {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  /* dots indicator */
+  .char-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 0 14px;
+  }
+  .char-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .char-dot.active {
+    background: var(--accent);
+    width: 20px;
+    border-radius: 3px;
+  }
+
+  /* ─── CHART SECTION ─── */
+  .chart-section {
+    padding: 0 20px 20px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .chart-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .chart-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .chart-tab {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .chart-tab.active {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .chart-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-area {
+    position: relative;
+    height: 140px;
+  }
+
+  /* Y axis labels */
+  .y-labels {
+    position: absolute;
+    left: 0; top: 0; bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: 8px;
+  }
+  .y-label {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  /* Grid lines */
+  .grid-lines {
+    position: absolute;
+    left: 28px; right: 0; top: 0; bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .grid-line {
+    border-top: 1px dashed #222;
+    width: 100%;
+  }
+
+  /* SVG chart */
+  .chart-svg-wrap {
+    position: absolute;
+    left: 28px; right: 0; top: 0; bottom: 20px;
+  }
+  .chart-svg-wrap svg { width: 100%; height: 100%; }
+
+  /* X axis labels */
+  .x-labels {
+    position: absolute;
+    bottom: 0;
+    left: 28px; right: 0;
+    display: flex;
+    justify-content: space-between;
+  }
+  .x-label {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  /* chart legend */
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ─── STATS ROW ─── */
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 4px;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* ─── LEADERBOARD SCREEN ─── */
+  .lb-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .filter-select {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    cursor: pointer;
+    gap: 8px;
+  }
+  .filter-select .arrow {
+    color: var(--accent);
+    font-size: 10px;
+  }
+
+  .date-filter {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 10px;
+    gap: 5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .date-filter .cal-icon { font-size: 13px; }
+
+  .active-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(232,255,60,0.12);
+    border: 1px solid rgba(232,255,60,0.3);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .filter-chip .x { font-size: 11px; opacity: 0.6; }
+
+  /* table */
+  .lb-table-wrap { padding: 12px 20px; }
+
+  .lb-table-head {
+    display: grid;
+    grid-template-columns: 40px 1fr 90px 80px;
+    gap: 8px;
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .th.right { text-align: right; }
+
+  .lb-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 90px 80px;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a1a1a;
+    align-items: center;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .lb-row:hover { background: rgba(255,255,255,0.02); }
+  .lb-row.mine {
+    background: rgba(232,255,60,0.05);
+    border-bottom-color: rgba(232,255,60,0.1);
+    border-radius: 6px;
+  }
+  .lb-row.mine .rank-num { color: var(--accent); }
+
+  .rank-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--muted);
+    line-height: 1;
+  }
+  .rank-1 { color: #ffd700 !important; }
+  .rank-2 { color: #c0c0c0 !important; }
+  .rank-3 { color: #cd7f32 !important; }
+
+  .athlete-info {}
+  .athlete-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .athlete-sub {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  .record-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    text-align: right;
+    line-height: 1;
+  }
+  .record-unit {
+    font-size: 9px;
+    color: var(--muted);
+    display: block;
+    font-family: 'Barlow', sans-serif;
+    text-align: right;
+  }
+
+  .record-date {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* progress bar mini */
+  .progress-mini {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .progress-fill.red { background: var(--accent2); }
+  .progress-fill.blue { background: #3cb4ff; }
+
+  /* ─── BOX LEADERBOARD ─── */
+  .box-hero {
+    background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .box-hero::after {
+    content: 'BOX';
+    position: absolute;
+    right: -10px; bottom: -15px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 90px;
+    color: rgba(232,255,60,0.04);
+    line-height: 1;
+    letter-spacing: -2px;
+    pointer-events: none;
+  }
+
+  .box-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .box-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .box-stats {
+    display: flex;
+    gap: 20px;
+    margin-top: 14px;
+  }
+  .box-stat { }
+  .box-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: var(--text);
+    line-height: 1;
+  }
+  .box-stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .category-tabs {
+    display: flex;
+    overflow-x: auto;
+    padding: 12px 20px;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+    scroll-snap-type: x mandatory;
+  }
+  .category-tabs::-webkit-scrollbar { display: none; }
+
+  .cat-tab {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--card);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .cat-tab.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  .podium-section {
+    padding: 16px 20px;
+  }
+  .podium-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+    height: 130px;
+  }
+
+  .podium-slot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .podium-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .podium-weight {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .podium-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .podium-bar.gold { background: linear-gradient(180deg, #ffd700, #b8960c); height: 90px; }
+  .podium-bar.silver { background: linear-gradient(180deg, #c0c0c0, #888); height: 65px; }
+  .podium-bar.bronze { background: linear-gradient(180deg, #cd7f32, #8b5000); height: 50px; }
+
+  .podium-rank-icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    position: sticky;
+    bottom: 0;
+    background: rgba(10,10,10,0.97);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    z-index: 100;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+  }
+  .nav-icon {
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+  .nav-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .nav-item.active .nav-icon { transform: translateY(-2px); }
+  .nav-item.active .nav-label { color: var(--accent); }
+  .nav-item.active .nav-dot { background: var(--accent); }
+  .nav-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: transparent;
+    margin-top: -1px;
+    transition: background 0.2s;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .char-slide { animation: fadeInUp 0.4s ease both; }
+  .rec-card { animation: fadeInUp 0.4s ease both; }
+  .rec-card:nth-child(2) { animation-delay: 0.05s; }
+  .rec-card:nth-child(3) { animation-delay: 0.1s; }
+  .rec-card:nth-child(4) { animation-delay: 0.15s; }
+  .rec-card:nth-child(5) { animation-delay: 0.2s; }
+
+  /* ─── TOOLTIP-LIKE highlight ─── */
+  .pr-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--accent);
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+    text-transform: uppercase;
+  }
+  .pr-badge.red { background: var(--accent2); color: #fff; }
+
+  /* dropdown mock */
+  .dropdown-mock {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 220px;
+    background: #1e1e1e;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 200;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .dropdown-mock.show { display: block; }
+  .drop-item {
+    padding: 11px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .drop-item:last-child { border: none; }
+  .drop-item:hover, .drop-item.selected { background: rgba(232,255,60,0.08); color: var(--accent); }
+  .drop-category {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 8px 16px 4px;
+    background: var(--surface);
+  }
+  .filter-wrap { position: relative; flex: 1; }
+
+  /* trend arrow */
+  .trend-up { color: #3cffa0; font-size: 10px; }
+  .trend-down { color: var(--accent2); font-size: 10px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ══════════ TOP BAR ══════════ -->
+  <div class="topbar">
+    <div class="logo">IRON<span>BOX</span></div>
+    <div class="topbar-right">
+      <div style="font-size:20px; cursor:pointer;">🔔</div>
+      <div class="avatar">KJ</div>
+    </div>
+  </div>
+
+  <!-- ══════════ SCREEN 1: DASHBOARD ══════════ -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="page-scroll">
+
+      <!-- Character carousel -->
+      <div class="character-section">
+        <div class="char-scroll-hint">
+          ← 종목을 선택하세요 →
+        </div>
+
+        <div class="char-track-wrap" id="charTrack">
+          <div class="char-track">
+
+            <!-- SLIDE 1: 리프팅 -->
+            <div class="char-slide">
+              <div class="char-figure-wrap">
+                <div class="char-label">리프팅</div>
+                <div class="char-svg-bg">
+                  <!-- Lifting SVG figure -->
+                  <svg width="72" height="130" viewBox="0 0 72 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- barbell -->
+                    <rect x="2" y="44" width="68" height="5" rx="2.5" fill="#e8ff3c" opacity="0.8"/>
+                    <rect x="2" y="42" width="10" height="9" rx="2" fill="#e8ff3c"/>
+                    <rect x="60" y="42" width="10" height="9" rx="2" fill="#e8ff3c"/>
+                    <!-- hands -->
+                    <circle cx="22" cy="46" r="5" fill="#c8a882"/>
+                    <circle cx="50" cy="46" r="5" fill="#c8a882"/>
+                    <!-- arms -->
+                    <line x1="22" y1="46" x2="26" y2="60" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <line x1="50" y1="46" x2="46" y2="60" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <!-- torso -->
+                    <rect x="25" y="58" width="22" height="28" rx="5" fill="#f0f0f0" opacity="0.9"/>
+                    <!-- head -->
+                    <circle cx="36" cy="48" r="0" fill="transparent"/>
+                    <!-- head properly -->
+                    <circle cx="36" cy="35" r="11" fill="#c8a882"/>
+                    <rect x="30" y="27" width="12" height="6" rx="2" fill="#555"/>
+                    <!-- shorts -->
+                    <rect x="24" y="84" width="10" height="18" rx="4" fill="#e8ff3c" opacity="0.9"/>
+                    <rect x="38" y="84" width="10" height="18" rx="4" fill="#e8ff3c" opacity="0.9"/>
+                    <!-- legs -->
+                    <rect x="25" y="100" width="8" height="22" rx="4" fill="#c8a882"/>
+                    <rect x="39" y="100" width="8" height="22" rx="4" fill="#c8a882"/>
+                    <!-- shoes -->
+                    <rect x="22" y="118" width="14" height="7" rx="3" fill="#333"/>
+                    <rect x="36" y="118" width="14" height="7" rx="3" fill="#333"/>
+                    <!-- highlight stripe on torso -->
+                    <rect x="28" y="62" width="4" height="20" rx="2" fill="rgba(232,255,60,0.3)"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="char-records">
+                <div class="rec-card">
+                  <div class="rec-name">백스쿼트</div>
+                  <div class="rec-value">140<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.11.03 <span class="pr-badge">PR</span></div>
+                  <div class="progress-mini"><div class="progress-fill" style="width:82%"></div></div>
+                </div>
+                <div class="rec-card">
+                  <div class="rec-name">데드리프트</div>
+                  <div class="rec-value">180<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.09.15</div>
+                  <div class="progress-mini"><div class="progress-fill" style="width:90%"></div></div>
+                </div>
+                <div class="rec-card">
+                  <div class="rec-name">벤치프레스</div>
+                  <div class="rec-value">100<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.10.20</div>
+                  <div class="progress-mini"><div class="progress-fill" style="width:65%"></div></div>
+                </div>
+                <div class="rec-card">
+                  <div class="rec-name">프론트스쿼트</div>
+                  <div class="rec-value">110<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.11.10 <span class="pr-badge">PR</span></div>
+                  <div class="progress-mini"><div class="progress-fill" style="width:70%"></div></div>
+                </div>
+                <div class="rec-card">
+                  <div class="rec-name">숄더프레스</div>
+                  <div class="rec-value">75<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.08.30</div>
+                  <div class="progress-mini"><div class="progress-fill" style="width:55%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 2: 역도 -->
+            <div class="char-slide">
+              <div class="char-figure-wrap">
+                <div class="char-label">역도</div>
+                <div class="char-svg-bg">
+                  <svg width="72" height="130" viewBox="0 0 72 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- overhead barbell -->
+                    <rect x="2" y="14" width="68" height="5" rx="2.5" fill="#ff4d2e" opacity="0.9"/>
+                    <rect x="2" y="12" width="10" height="9" rx="2" fill="#ff4d2e"/>
+                    <rect x="60" y="12" width="10" height="9" rx="2" fill="#ff4d2e"/>
+                    <!-- arms overhead -->
+                    <line x1="24" y1="16" x2="30" y2="52" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <line x1="48" y1="16" x2="42" y2="52" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <!-- torso squat -->
+                    <rect x="25" y="64" width="22" height="22" rx="5" fill="#f0f0f0" opacity="0.9"/>
+                    <rect x="28" y="68" width="4" height="14" rx="2" fill="rgba(255,77,46,0.3)"/>
+                    <!-- head -->
+                    <circle cx="36" cy="55" r="11" fill="#c8a882"/>
+                    <rect x="30" y="47" width="12" height="6" rx="2" fill="#444"/>
+                    <!-- squat legs -->
+                    <rect x="24" y="84" width="10" height="12" rx="3" fill="#ff4d2e" opacity="0.9"/>
+                    <rect x="38" y="84" width="10" height="12" rx="3" fill="#ff4d2e" opacity="0.9"/>
+                    <rect x="18" y="92" width="8" height="20" rx="4" fill="#c8a882" transform="rotate(-15,22,92)"/>
+                    <rect x="46" y="92" width="8" height="20" rx="4" fill="#c8a882" transform="rotate(15,50,92)"/>
+                    <!-- shoes -->
+                    <rect x="14" y="110" width="14" height="7" rx="3" fill="#333"/>
+                    <rect x="44" y="110" width="14" height="7" rx="3" fill="#333"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="char-records">
+                <div class="rec-card accent2">
+                  <div class="rec-name">스내치</div>
+                  <div class="rec-value">90<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.10.05 <span class="pr-badge red">PR</span></div>
+                  <div class="progress-mini"><div class="progress-fill red" style="width:75%"></div></div>
+                </div>
+                <div class="rec-card accent2">
+                  <div class="rec-name">클린&저크</div>
+                  <div class="rec-value">115<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.11.01</div>
+                  <div class="progress-mini"><div class="progress-fill red" style="width:88%"></div></div>
+                </div>
+                <div class="rec-card accent2">
+                  <div class="rec-name">클린</div>
+                  <div class="rec-value">120<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.09.22</div>
+                  <div class="progress-mini"><div class="progress-fill red" style="width:82%"></div></div>
+                </div>
+                <div class="rec-card accent2">
+                  <div class="rec-name">저크</div>
+                  <div class="rec-value">108<span class="rec-unit">kg</span></div>
+                  <div class="rec-date">2025.10.18</div>
+                  <div class="progress-mini"><div class="progress-fill red" style="width:72%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 3: 와드 -->
+            <div class="char-slide">
+              <div class="char-figure-wrap">
+                <div class="char-label">와드</div>
+                <div class="char-svg-bg">
+                  <svg width="72" height="130" viewBox="0 0 72 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- rope jump motion -->
+                    <!-- body jumping -->
+                    <circle cx="36" cy="38" r="11" fill="#c8a882"/>
+                    <rect x="30" y="30" width="12" height="6" rx="2" fill="#444"/>
+                    <!-- torso -->
+                    <rect x="26" y="52" width="20" height="26" rx="5" fill="#3cb4ff" opacity="0.9"/>
+                    <rect x="29" y="56" width="4" height="18" rx="2" fill="rgba(60,180,255,0.3)"/>
+                    <!-- arms out dynamic -->
+                    <line x1="26" y1="58" x2="10" y2="70" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <line x1="46" y1="58" x2="62" y2="70" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <!-- hands -->
+                    <circle cx="10" cy="70" r="4" fill="#c8a882"/>
+                    <circle cx="62" cy="70" r="4" fill="#c8a882"/>
+                    <!-- legs jumping -->
+                    <rect x="26" y="76" width="9" height="16" rx="4" fill="#3cb4ff" opacity="0.8"/>
+                    <rect x="37" y="76" width="9" height="16" rx="4" fill="#3cb4ff" opacity="0.8"/>
+                    <rect x="24" y="88" width="8" height="18" rx="4" fill="#c8a882" transform="rotate(8,28,88)"/>
+                    <rect x="40" y="88" width="8" height="18" rx="4" fill="#c8a882" transform="rotate(-8,44,88)"/>
+                    <!-- shoes -->
+                    <rect x="20" y="104" width="14" height="6" rx="3" fill="#333"/>
+                    <rect x="38" y="104" width="14" height="6" rx="3" fill="#333"/>
+                    <!-- rope curve hint -->
+                    <path d="M8 74 Q36 130 64 74" stroke="#3cb4ff" stroke-width="2" fill="none" stroke-dasharray="3,3" opacity="0.5"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="char-records">
+                <div class="rec-card blue">
+                  <div class="rec-name">FRAN</div>
+                  <div class="rec-value">4<span class="rec-unit">:23</span></div>
+                  <div class="rec-date">2025.10.11 <span class="pr-badge" style="background:#3cb4ff;">PR</span></div>
+                  <div class="progress-mini"><div class="progress-fill blue" style="width:80%"></div></div>
+                </div>
+                <div class="rec-card blue">
+                  <div class="rec-name">MURPH</div>
+                  <div class="rec-value">42<span class="rec-unit">:15</span></div>
+                  <div class="rec-date">2025.05.26</div>
+                  <div class="progress-mini"><div class="progress-fill blue" style="width:65%"></div></div>
+                </div>
+                <div class="rec-card blue">
+                  <div class="rec-name">CINDY</div>
+                  <div class="rec-value">22<span class="rec-unit">rds</span></div>
+                  <div class="rec-date">2025.09.14</div>
+                  <div class="progress-mini"><div class="progress-fill blue" style="width:73%"></div></div>
+                </div>
+                <div class="rec-card blue">
+                  <div class="rec-name">GRACE</div>
+                  <div class="rec-value">2<span class="rec-unit">:48</span></div>
+                  <div class="rec-date">2025.08.07</div>
+                  <div class="progress-mini"><div class="progress-fill blue" style="width:58%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 4: 유산소 -->
+            <div class="char-slide">
+              <div class="char-figure-wrap">
+                <div class="char-label">유산소</div>
+                <div class="char-svg-bg">
+                  <svg width="72" height="130" viewBox="0 0 72 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- running figure -->
+                    <circle cx="42" cy="28" r="11" fill="#c8a882"/>
+                    <rect x="36" y="20" width="12" height="6" rx="2" fill="#444"/>
+                    <!-- torso lean forward -->
+                    <rect x="28" y="42" width="20" height="24" rx="5" fill="#3cffa0" opacity="0.9" transform="rotate(-10,38,54)"/>
+                    <rect x="31" y="46" width="4" height="14" rx="2" fill="rgba(60,255,160,0.3)" transform="rotate(-10,33,53)"/>
+                    <!-- arm swing -->
+                    <line x1="32" y1="46" x2="14" y2="38" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <line x1="44" y1="50" x2="58" y2="66" stroke="#c8a882" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="14" cy="38" r="4" fill="#c8a882"/>
+                    <circle cx="58" cy="66" r="4" fill="#c8a882"/>
+                    <!-- stride legs -->
+                    <rect x="28" y="65" width="9" height="20" rx="4" fill="#3cffa0" opacity="0.8" transform="rotate(20,32,75)"/>
+                    <rect x="36" y="65" width="9" height="20" rx="4" fill="#3cffa0" opacity="0.8" transform="rotate(-30,40,75)"/>
+                    <rect x="34" y="82" width="8" height="20" rx="4" fill="#c8a882" transform="rotate(20,38,92)"/>
+                    <rect x="24" y="80" width="8" height="20" rx="4" fill="#c8a882" transform="rotate(-20,28,90)"/>
+                    <!-- shoes -->
+                    <rect x="38" y="98" width="16" height="6" rx="3" fill="#333" transform="rotate(20,46,101)"/>
+                    <rect x="14" y="96" width="16" height="6" rx="3" fill="#333" transform="rotate(-20,22,99)"/>
+                    <!-- motion lines -->
+                    <line x1="4" y1="50" x2="18" y2="50" stroke="#3cffa0" stroke-width="1.5" stroke-dasharray="2,3" opacity="0.4"/>
+                    <line x1="2" y1="58" x2="14" y2="58" stroke="#3cffa0" stroke-width="1.5" stroke-dasharray="2,3" opacity="0.3"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="char-records">
+                <div class="rec-card green">
+                  <div class="rec-name">런 1KM</div>
+                  <div class="rec-value">3<span class="rec-unit">:24</span></div>
+                  <div class="rec-date">2025.11.05</div>
+                  <div class="progress-mini"><div class="progress-fill green" style="width:78%"></div></div>
+                </div>
+                <div class="rec-card green">
+                  <div class="rec-name">로잉 1KM</div>
+                  <div class="rec-value">3<span class="rec-unit">:12</span></div>
+                  <div class="rec-date">2025.10.28 <span class="pr-badge" style="background:#3cffa0;color:#000;">PR</span></div>
+                  <div class="progress-mini"><div class="progress-fill green" style="width:85%"></div></div>
+                </div>
+                <div class="rec-card green">
+                  <div class="rec-name">스키 1KM</div>
+                  <div class="rec-value">3<span class="rec-unit">:45</span></div>
+                  <div class="rec-date">2025.10.15</div>
+                  <div class="progress-mini"><div class="progress-fill green" style="width:60%"></div></div>
+                </div>
+                <div class="rec-card green">
+                  <div class="rec-name">바이크 1KM</div>
+                  <div class="rec-value">1<span class="rec-unit">:52</span></div>
+                  <div class="rec-date">2025.09.30</div>
+                  <div class="progress-mini"><div class="progress-fill green" style="width:70%"></div></div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- char-track -->
+        </div><!-- char-track-wrap -->
+
+        <div class="char-dots">
+          <div class="char-dot active" onclick="goSlide(0)"></div>
+          <div class="char-dot" onclick="goSlide(1)"></div>
+          <div class="char-dot" onclick="goSlide(2)"></div>
+          <div class="char-dot" onclick="goSlide(3)"></div>
+        </div>
+      </div><!-- character-section -->
+
+      <!-- Quick Stats -->
+      <div class="section-label">이번 달 요약</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num">12</div>
+          <div class="stat-label">총 운동일</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">3</div>
+          <div class="stat-label">PR 달성</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">4<span style="font-size:14px">위</span></div>
+          <div class="stat-label">박스 순위</div>
+        </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="section-label">퍼포먼스 추이</div>
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="chart-title">백스쿼트 1RM</div>
+          <div class="chart-tabs">
+            <button class="chart-tab active">월별</button>
+            <button class="chart-tab">연도별</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-area">
+            <!-- Y labels -->
+            <div class="y-labels">
+              <div class="y-label">160</div>
+              <div class="y-label">140</div>
+              <div class="y-label">120</div>
+              <div class="y-label">100</div>
+            </div>
+            <!-- Grid -->
+            <div class="grid-lines">
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+              <div class="grid-line"></div>
+            </div>
+            <!-- SVG Line Chart -->
+            <div class="chart-svg-wrap">
+              <svg viewBox="0 0 300 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#e8ff3c" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#e8ff3c" stop-opacity="0.02"/>
+                  </linearGradient>
+                </defs>
+                <!-- area fill -->
+                <path d="M0,90 L42,85 L84,75 L126,65 L168,60 L210,45 L252,30 L300,10 L300,120 L0,120 Z"
+                      fill="url(#chartGrad)"/>
+                <!-- line -->
+                <polyline points="0,90 42,85 84,75 126,65 168,60 210,45 252,30 300,10"
+                  fill="none" stroke="#e8ff3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- dots -->
+                <circle cx="0" cy="90" r="3.5" fill="#e8ff3c"/>
+                <circle cx="42" cy="85" r="3.5" fill="#e8ff3c"/>
+                <circle cx="84" cy="75" r="3.5" fill="#e8ff3c"/>
+                <circle cx="126" cy="65" r="3.5" fill="#e8ff3c"/>
+                <circle cx="168" cy="60" r="3.5" fill="#e8ff3c"/>
+                <circle cx="210" cy="45" r="3.5" fill="#e8ff3c"/>
+                <circle cx="252" cy="30" r="3.5" fill="#e8ff3c"/>
+                <!-- PR dot -->
+                <circle cx="300" cy="10" r="5.5" fill="#e8ff3c" stroke="#0a0a0a" stroke-width="2"/>
+                <!-- PR label -->
+                <rect x="268" y="0" width="30" height="14" rx="3" fill="#e8ff3c"/>
+                <text x="283" y="10.5" text-anchor="middle" font-family="'Barlow Condensed'" font-size="9" font-weight="700" fill="#000">140kg</text>
+              </svg>
+            </div>
+            <!-- X labels -->
+            <div class="x-labels">
+              <div class="x-label">5월</div>
+              <div class="x-label">6월</div>
+              <div class="x-label">7월</div>
+              <div class="x-label">8월</div>
+              <div class="x-label">9월</div>
+              <div class="x-label">10월</div>
+              <div class="x-label">11월</div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#e8ff3c;"></div>
+              백스쿼트 1RM
+            </div>
+            <div class="legend-item" style="margin-left:auto; color:#3cffa0;">
+              ▲ +25kg (6개월)
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- page-scroll -->
+  </div><!-- screen-dashboard -->
+
+  <!-- ══════════ SCREEN 2: 개인 리더보드 ══════════ -->
+  <div class="screen" id="screen-personal">
+    <div class="page-scroll">
+
+      <div class="lb-header">
+        <div class="filter-row">
+          <div class="filter-wrap">
+            <div class="filter-select" onclick="toggleDrop()">
+              <span id="selectedCategory">전체 종목</span>
+              <span class="arrow">▾</span>
+            </div>
+            <div class="dropdown-mock" id="dropMenu">
+              <div class="drop-category">── 리프팅</div>
+              <div class="drop-item" onclick="selectCat('백스쿼트')">백스쿼트</div>
+              <div class="drop-item" onclick="selectCat('데드리프트')">데드리프트</div>
+              <div class="drop-item" onclick="selectCat('벤치프레스')">벤치프레스</div>
+              <div class="drop-item" onclick="selectCat('숄더프레스')">숄더프레스</div>
+              <div class="drop-item" onclick="selectCat('프론트스쿼트')">프론트스쿼트</div>
+              <div class="drop-category">── 역도</div>
+              <div class="drop-item" onclick="selectCat('스내치')">스내치</div>
+              <div class="drop-item" onclick="selectCat('클린&저크')">클린&저크</div>
+              <div class="drop-category">── 와드</div>
+              <div class="drop-item" onclick="selectCat('FRAN')">FRAN</div>
+              <div class="drop-item" onclick="selectCat('MURPH')">MURPH</div>
+              <div class="drop-category">── 유산소</div>
+              <div class="drop-item" onclick="selectCat('런 1KM')">런 1KM</div>
+              <div class="drop-item" onclick="selectCat('로잉 1KM')">로잉 1KM</div>
+            </div>
+          </div>
+          <div class="date-filter">
+            <span class="cal-icon">📅</span>
+            <span>최근 6개월</span>
+            <span style="color:var(--accent); font-size:10px;">▾</span>
+          </div>
+        </div>
+        <div class="active-filters">
+          <div class="filter-chip">전체 <span class="x">×</span></div>
+          <div class="filter-chip" style="background:rgba(60,180,255,0.1);border-color:rgba(60,180,255,0.3);color:#3cb4ff;">2025.06 - 11.30</div>
+        </div>
+      </div>
+
+      <div class="lb-table-wrap">
+        <div class="lb-table-head">
+          <div class="th">#</div>
+          <div class="th">종목</div>
+          <div class="th right">기록</div>
+          <div class="th right">날짜</div>
+        </div>
+
+        <!-- rows -->
+        <div class="lb-row mine">
+          <div class="rank-num rank-1">1</div>
+          <div class="athlete-info">
+            <div class="athlete-name">데드리프트</div>
+            <div class="athlete-sub">리프팅 · 1RM <span class="trend-up">▲ +10kg</span></div>
+          </div>
+          <div>
+            <div class="record-val">180<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.09.15</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num rank-2">2</div>
+          <div class="athlete-info">
+            <div class="athlete-name">백스쿼트</div>
+            <div class="athlete-sub">리프팅 · 1RM <span class="trend-up">▲ PR</span></div>
+          </div>
+          <div>
+            <div class="record-val">140<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.11.03</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num rank-3">3</div>
+          <div class="athlete-info">
+            <div class="athlete-name">클린</div>
+            <div class="athlete-sub">역도 · 1RM <span class="trend-up">▲ +5kg</span></div>
+          </div>
+          <div>
+            <div class="record-val">120<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.09.22</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">4</div>
+          <div class="athlete-info">
+            <div class="athlete-name">클린&저크</div>
+            <div class="athlete-sub">역도 · 1RM</div>
+          </div>
+          <div>
+            <div class="record-val">115<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.11.01</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">5</div>
+          <div class="athlete-info">
+            <div class="athlete-name">프론트스쿼트</div>
+            <div class="athlete-sub">리프팅 · 1RM <span class="trend-up">▲ PR</span></div>
+          </div>
+          <div>
+            <div class="record-val">110<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.11.10</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">6</div>
+          <div class="athlete-info">
+            <div class="athlete-name">FRAN</div>
+            <div class="athlete-sub">와드 · PR</div>
+          </div>
+          <div>
+            <div class="record-val">4:23<span class="record-unit">min</span></div>
+          </div>
+          <div class="record-date">25.10.11</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">7</div>
+          <div class="athlete-info">
+            <div class="athlete-name">스내치</div>
+            <div class="athlete-sub">역도 · 1RM <span class="trend-up">▲ PR</span></div>
+          </div>
+          <div>
+            <div class="record-val">90<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.10.05</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">8</div>
+          <div class="athlete-info">
+            <div class="athlete-name">로잉 1KM</div>
+            <div class="athlete-sub">유산소 · PR</div>
+          </div>
+          <div>
+            <div class="record-val">3:12<span class="record-unit">min</span></div>
+          </div>
+          <div class="record-date">25.10.28</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">9</div>
+          <div class="athlete-info">
+            <div class="athlete-name">런 1KM</div>
+            <div class="athlete-sub">유산소</div>
+          </div>
+          <div>
+            <div class="record-val">3:24<span class="record-unit">min</span></div>
+          </div>
+          <div class="record-date">25.11.05</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">10</div>
+          <div class="athlete-info">
+            <div class="athlete-name">벤치프레스</div>
+            <div class="athlete-sub">리프팅 · 1RM</div>
+          </div>
+          <div>
+            <div class="record-val">100<span class="record-unit">kg</span></div>
+          </div>
+          <div class="record-date">25.10.20</div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- screen-personal -->
+
+  <!-- ══════════ SCREEN 3: 박스 리더보드 ══════════ -->
+  <div class="screen" id="screen-box">
+    <div class="page-scroll">
+
+      <div class="box-hero">
+        <div class="box-name">CROSSFIT GANGNAM</div>
+        <div class="box-sub">박스 멤버 · 42명</div>
+        <div class="box-stats">
+          <div class="box-stat">
+            <div class="box-stat-num">42</div>
+            <div class="box-stat-label">멤버</div>
+          </div>
+          <div class="box-stat">
+            <div class="box-stat-num">156</div>
+            <div class="box-stat-label">이번달 기록</div>
+          </div>
+          <div class="box-stat">
+            <div class="box-stat-num">12</div>
+            <div class="box-stat-label">PR 달성</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category tabs -->
+      <div class="category-tabs">
+        <div class="cat-tab active">전체</div>
+        <div class="cat-tab">백스쿼트</div>
+        <div class="cat-tab">데드리프트</div>
+        <div class="cat-tab">스내치</div>
+        <div class="cat-tab">클린&저크</div>
+        <div class="cat-tab">FRAN</div>
+        <div class="cat-tab">MURPH</div>
+        <div class="cat-tab">런 1KM</div>
+        <div class="cat-tab">로잉 1KM</div>
+      </div>
+
+      <!-- Podium -->
+      <div class="podium-section">
+        <div class="podium-title">백스쿼트 1RM TOP 3</div>
+        <div class="podium">
+          <!-- 2nd -->
+          <div class="podium-slot">
+            <div class="podium-name" style="color:#c0c0c0;">박지수</div>
+            <div class="podium-weight" style="color:#c0c0c0;">165kg</div>
+            <div class="podium-bar silver">
+              <span class="podium-rank-icon">🥈</span>
+            </div>
+          </div>
+          <!-- 1st -->
+          <div class="podium-slot">
+            <div class="podium-name" style="color:#ffd700;">김태민</div>
+            <div class="podium-weight" style="color:#ffd700;">185kg</div>
+            <div class="podium-bar gold">
+              <span class="podium-rank-icon">🥇</span>
+            </div>
+          </div>
+          <!-- 3rd -->
+          <div class="podium-slot">
+            <div class="podium-name" style="color:#cd7f32;">이현우</div>
+            <div class="podium-weight" style="color:#cd7f32;">155kg</div>
+            <div class="podium-bar bronze">
+              <span class="podium-rank-icon">🥉</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full ranking table -->
+      <div class="lb-table-wrap" style="padding-top:0;">
+        <div class="lb-table-head">
+          <div class="th">#</div>
+          <div class="th">이름</div>
+          <div class="th right">기록</div>
+          <div class="th right">날짜</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num rank-1">1</div>
+          <div class="athlete-info">
+            <div class="athlete-name">김태민</div>
+            <div class="athlete-sub">3년 · M</div>
+          </div>
+          <div><div class="record-val">185<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.10.30</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num rank-2">2</div>
+          <div class="athlete-info">
+            <div class="athlete-name">박지수</div>
+            <div class="athlete-sub">2년 · F</div>
+          </div>
+          <div><div class="record-val">165<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.11.02</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num rank-3">3</div>
+          <div class="athlete-info">
+            <div class="athlete-name">이현우</div>
+            <div class="athlete-sub">1.5년 · M</div>
+          </div>
+          <div><div class="record-val">155<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.10.25</div>
+        </div>
+
+        <!-- MY RANK highlight -->
+        <div class="lb-row mine">
+          <div class="rank-num" style="color:var(--accent); font-size:18px;">4</div>
+          <div class="athlete-info">
+            <div class="athlete-name">나 (김지원) <span style="font-size:10px;color:var(--accent);">◀ ME</span></div>
+            <div class="athlete-sub">2년 · M</div>
+          </div>
+          <div><div class="record-val">140<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.11.03</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">5</div>
+          <div class="athlete-info">
+            <div class="athlete-name">최서연</div>
+            <div class="athlete-sub">1년 · F</div>
+          </div>
+          <div><div class="record-val">135<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.11.08</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">6</div>
+          <div class="athlete-info">
+            <div class="athlete-name">강민준</div>
+            <div class="athlete-sub">3년 · M</div>
+          </div>
+          <div><div class="record-val">130<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.09.20</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">7</div>
+          <div class="athlete-info">
+            <div class="athlete-name">윤다혜</div>
+            <div class="athlete-sub">2년 · F</div>
+          </div>
+          <div><div class="record-val">125<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.10.12</div>
+        </div>
+
+        <div class="lb-row">
+          <div class="rank-num" style="font-size:18px;color:var(--muted)">8</div>
+          <div class="athlete-info">
+            <div class="athlete-name">정해준</div>
+            <div class="athlete-sub">1년 · M</div>
+          </div>
+          <div><div class="record-val">120<span class="record-unit">kg</span></div></div>
+          <div class="record-date">25.11.06</div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- screen-box -->
+
+  <!-- ══════════ BOTTOM NAV ══════════ -->
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="showScreen('dashboard', this)">
+      <div class="nav-icon">⚡</div>
+      <div class="nav-label">대시보드</div>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" onclick="showScreen('personal', this)">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">개인 기록</div>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" onclick="showScreen('box', this)">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">박스 랭킹</div>
+      <div class="nav-dot"></div>
+    </button>
+  </div>
+</div><!-- app -->
+
+<script>
+  // Screen navigation
+  function showScreen(name, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (document.getElementById('dropMenu')) {
+      document.getElementById('dropMenu').classList.remove('show');
+    }
+  }
+
+  // Character carousel dots
+  const charTrack = document.getElementById('charTrack');
+  const dots = document.querySelectorAll('.char-dot');
+
+  function goSlide(i) {
+    const slideWidth = 420;
+    charTrack.scrollTo({ left: i * slideWidth, behavior: 'smooth' });
+  }
+
+  charTrack && charTrack.addEventListener('scroll', () => {
+    const i = Math.round(charTrack.scrollLeft / 420);
+    dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+  });
+
+  // Dropdown
+  function toggleDrop() {
+    const menu = document.getElementById('dropMenu');
+    menu.classList.toggle('show');
+  }
+
+  function selectCat(name) {
+    document.getElementById('selectedCategory').textContent = name;
+    document.getElementById('dropMenu').classList.remove('show');
+  }
+
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('dropMenu');
+    if (menu && !e.target.closest('.filter-wrap')) {
+      menu.classList.remove('show');
+    }
+  });
+
+  // Chart tab toggle
+  document.querySelectorAll('.chart-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
